@@ -1,1 +1,7 @@
+systemctl daemon-reload
+
+systemctl enable --now tailscaled
+
 systemctl status tailscaled --no-pager -l
+
+tailscale up
