@@ -1,1 +1,25 @@
-ls -l /usr/local/sbin/tailscaled /usr/sbin/tailscaled /usr/local/bin/tailscale /usr/bin/tailscale
+BIN=$(find /tmp -type f -name tailscaled -print -quit)
+
+if [ -z "$BIN" ] && [ -f /tmp/tailscale.tgz ]; then
+    mkdir -p /tmp/tailscale-recovery
+    tar -xzf /tmp/tailscale.tgz -C /tmp/tailscale-recovery
+    BIN=$(find /tmp/tailscale-recovery -type f -name tailscaled -print -quit)
+fi
+
+if [ -z "$BIN" ]; then
+    echo "ERROR: ملف tailscaled غير موجود"
+else
+    install -m 755 "$BIN" /usr/local/sbin/tailscaled
+    systemctl daemon-reload
+    systemctl enable tailscaled
+    systemctl restart tailscaled
+
+    systemctl status tailscaled --no-pager -l
+
+    if systemctl is-active --quiet tailscaled; then
+        tailscale up
+    else
+        echo "فشل تشغيل الخدمة، تفاصيل الخطأ:"
+        journalctl -u tailscaled -n 20 --no-pager
+    fi
+fi
