@@ -1,0 +1,62 @@
+cd /tmp
+
+curl -fL -o tailscale.tgz \
+https://pkgs.tailscale.com/stable/tailscale_1.104.5_386.tgz
+
+tar -xzf tailscale.tgz
+
+
+
+
+
+sudo install -m 755 tailscale_1.104.5_386/tailscale /usr/local/bin/tailscale
+
+sudo install -m 755 tailscale_1.104.5_386/tailscaled /usr/local/sbin/tailscaled
+
+sudo mkdir -p /var/lib/tailscale
+
+
+
+
+
+
+sudo tee /etc/systemd/system/tailscaled.service >/dev/null <<'EOF'
+[Unit]
+Description=Tailscale daemon
+After=network.target
+
+[Service]
+Type=simple
+RuntimeDirectory=tailscale
+ExecStart=/usr/local/sbin/tailscaled --state=/var/lib/tailscale/tailscaled.state --socket=/run/tailscale/tailscaled.sock
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+
+
+
+
+
+
+
+  sudo systemctl daemon-reload
+sudo systemctl enable --now tailscaled
+
+
+
+
+
+
+
+  sudo tailscale up
+
+
+
+
+
+  tailscale status
+tailscale ip -4
